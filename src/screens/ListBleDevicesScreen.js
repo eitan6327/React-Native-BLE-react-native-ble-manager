@@ -24,12 +24,44 @@ const ListBleDevicesScreen = function App({ navigation }) {
                 buttonPositive: 'OK',
             }
         );
-
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("Permission Granted. Try scanning again");
-
+          console.log('Permission Granted. Try scanning again el');
         } else {
-            console.log("Permission denied");
+          console.log('Permission denied');
+        }
+
+        const granted_b = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          {
+            title: 'Permission Scanning Bluetooth',
+            message: 'Requirement for Bluetooth',
+            buttonNeutral: 'Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+
+        if (granted_b === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Permission Granted. Try scanning again el 2');
+        } else {
+          console.log('Permission denied 2');
+        }
+
+        const granted_c = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          {
+            title: 'Permission Connect Bluetooth',
+            message: 'Requirement for Bluetooth',
+            buttonNeutral: 'Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+
+        if (granted_c === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Permission Granted. Try scanning again el 3');
+        } else {
+          console.log('Permission denied 3');
         }
     }
 

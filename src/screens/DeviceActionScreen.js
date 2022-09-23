@@ -5,134 +5,143 @@ import { BleManager, connectDevice } from "../components/BleManager";
 import { Buffer } from "buffer";
 
 const DeviceActionScreen = function ({ route }) {
+  const {deviceId, deviceName} = route.params;
+  // const serviceId = "1800"
+  // const characId = "2a00"
+  const serviceId = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E';
+  const characId = '6E400007-B5A3-F393-E0A9-E50E24DCCA9E';
 
-    const { deviceId, deviceName } = route.params
-    const serviceId = "1800"
-    const characId = "2a00"
+  const readData = async function () {
+    BleManager.isPeripheralConnected(deviceId, []).then(async isConnected => {
+      console.log(isConnected);
+      if (!isConnected) {
+        console.log('Peripheral is NOT connected!');
+        Toaster('Peripheral not connected. Try reconnecting.');
+        return;
+      }
+      await BleManager.read(deviceId, serviceId, characId)
+        .then(readData => {
+          console.log('Read: ' + readData);
+          const data = Buffer.from(readData).toString();
+          console.log(data);
+          Toaster('Data read successfully : ' + data);
+          // const buffer = Buffer.Buffer.from(readData); //https://github.com/feross/buffer#convert-arraybuffer-to-buffer
+          // const sensorData = buffer.readUInt8(1, true);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    });
+  };
 
-    const readData = async function () {
+  // const notifyData = async function () {
+  //     BleManager.startNotification(deviceId, serviceId, characId)
+  //         .then(() => {
+  //             console.log("Notification started");
+  //             Toaster("Notification started")
+  //         })
+  //         .catch((error) => {
+  //             console.log(error);
+  //         });
+  // }
 
-        BleManager.isPeripheralConnected(deviceId, [])
-            .then(async (isConnected) => {
-                console.log(isConnected)
-                if (!isConnected) {
-                    console.log("Peripheral is NOT connected!");
-                    Toaster("Peripheral not connected. Try reconnecting.")
-                    return
-                }
-                await BleManager.read(deviceId, serviceId, characId)
-                    .then((readData) => {
-                        console.log("Read: " + readData);
-                        const data = Buffer.from(readData).toString();
-                        console.log(data)
-                        Toaster("Data read successfully : " + data)
-                        // const buffer = Buffer.Buffer.from(readData); //https://github.com/feross/buffer#convert-arraybuffer-to-buffer
-                        // const sensorData = buffer.readUInt8(1, true);
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                    });
-            });
+  // const writeData = async function () {
+  //     // Convert data to byte array before write/writeWithoutResponse
+  //     // import { stringToBytes } from "convert-string";
+  //     // const data = stringToBytes(yourStringData);
+
+  //     BleManager.write(deviceId, serviceId, characId, data)
+  //         .then(() => {
+  //             // Success code
+  //             console.log("Write: " + data);
+  //         })
+  //         .catch((error) => {
+  //             // Failure code
+  //             console.log(error);
+  //         });
+  // }
+
+  const reconnect = async function () {
+    BleManager.isPeripheralConnected(deviceId, []).then(async isConnected => {
+      console.log(isConnected);
+      if (!isConnected) {
+        console.log('Peripheral is already connected!');
+        Toaster('Peripheral is already connected.');
+        return;
+      }
+    });
+
+    Toaster('Trying to reconnect with the device...Please wait..');
+    const connection = await connectDevice(deviceId);
+    if (connection) {
+      Toaster('Reconnected with the device successfully');
+    } else {
+      Toaster('Some error occurred. Try again');
     }
+  };
 
-    // const notifyData = async function () {
-    //     BleManager.startNotification(deviceId, serviceId, characId)
-    //         .then(() => {
-    //             console.log("Notification started");
-    //             Toaster("Notification started")
-    //         })
-    //         .catch((error) => {
-    //             console.log(error);
-    //         });
-    // }
+  const disconnect = async function () {
+    Toaster('Disconnecting device...Please wait..');
+    BleManager.disconnect(deviceId)
+      .then(() => {
+        console.log('Disconnected');
+        Toaster('Device has been disconnected successfully');
+      })
+      .catch(error => {
+        console.log(error);
+        Toaster(error);
+      });
+  };
 
-    // const writeData = async function () {
-    //     // Convert data to byte array before write/writeWithoutResponse
-    //     // import { stringToBytes } from "convert-string";
-    //     // const data = stringToBytes(yourStringData);
+  return (
+    <View style={styling.header}>
+      <View style={styling.avatarOutline}>
+        <Image
+          style={styling.avatar}
+          source={require('../../assets/ble_connected.png')}
+        />
+      </View>
 
-    //     BleManager.write(deviceId, serviceId, characId, data)
-    //         .then(() => {
-    //             // Success code
-    //             console.log("Write: " + data);
-    //         })
-    //         .catch((error) => {
-    //             // Failure code
-    //             console.log(error);
-    //         });
-    // }
+      <ScrollView style={{marginTop: 180}}>
+        <View style={styling.body}>
+          <View style={styling.bodyContent}>
+            <Text style={styling.name}>{deviceId}</Text>
+            <Text style={styling.info}>{deviceName}</Text>
 
-
-    const reconnect = async function () {
-
-        BleManager.isPeripheralConnected(deviceId, [])
-            .then(async (isConnected) => {
-                console.log(isConnected)
-                if (!isConnected) {
-                    console.log("Peripheral is already connected!");
-                    Toaster("Peripheral is already connected.")
-                    return
-                }
-            });
-
-        Toaster("Trying to reconnect with the device...Please wait..")
-        const connection = await connectDevice(deviceId)
-        if (connection) {
-            Toaster("Reconnected with the device successfully")
-        }
-        else {
-            Toaster("Some error occurred. Try again")
-        }
-    }
-
-    const disconnect = async function () {
-        Toaster("Disconnecting device...Please wait..")
-        BleManager.disconnect(deviceId)
-            .then(() => {
-                console.log("Disconnected");
-                Toaster("Device has been disconnected successfully")
-            })
-            .catch((error) => {
-                console.log(error);
-                Toaster(error)
-            });
-    }
-
-    return (
-        <View style={styling.header}>
-            <View style={styling.avatarOutline} >
-                <Image style={styling.avatar} source={require('../../assets/ble_connected.png')} />
+            <View style={styling.buttonContainer}>
+              <TouchableOpacity
+                style={styling.button}
+                onPress={() => {
+                  readData();
+                }}>
+                <Text style={styling.buttonText}>Read data</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styling.button} onPress={() => {}}>
+                <Text style={styling.buttonText}>Write data</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styling.button} onPress={() => {}}>
+                <Text style={styling.buttonText}>Notify</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styling.button2}
+                onPress={() => {
+                  reconnect();
+                }}>
+                <Text style={styling.buttonText}>Reconnect</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styling.button3}
+                onPress={() => {
+                  disconnect();
+                }}>
+                <Text style={styling.buttonText}>Disconnect</Text>
+              </TouchableOpacity>
             </View>
-
-            <ScrollView style={{ marginTop: 180 }}>
-                <View style={styling.body}>
-                    <View style={styling.bodyContent}>
-                        <Text style={styling.name}>{deviceId}</Text>
-                        <Text style={styling.info}>{deviceName}</Text>
-
-                        <View style={styling.buttonContainer}>
-                            <TouchableOpacity style={styling.button} onPress={() => { readData() }}>
-                                <Text style={styling.buttonText}>Read data</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styling.button} onPress={() => { }} >
-                                <Text style={styling.buttonText}>Write data</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styling.button} onPress={() => { }} >
-                                <Text style={styling.buttonText}>Notify</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styling.button2} onPress={() => { reconnect() }} >
-                                <Text style={styling.buttonText}>Reconnect</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styling.button3} onPress={() => { disconnect() }} >
-                                <Text style={styling.buttonText}>Disconnect</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
-
+          </View>
         </View>
-    )
+      </ScrollView>
+    </View>
+  );
 }
 
 const styling = StyleSheet.create({
